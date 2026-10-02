@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- Geometric Sphere Logo -->
+  <!-- Outer hexagon -->
+  <polygon points="60,10 110,35 110,85 60,110 10,85 10,35" fill="none" stroke="#0d0d0d" stroke-width="3"/>
+  
+  <!-- Middle hexagon -->
+  <polygon points="60,25 95,47.5 95,72.5 60,95 25,72.5 25,47.5" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+  
+  <!-- Inner hexagon -->
+  <polygon points="60,40 80,55 80,70 60,85 40,70 40,55" fill="#0d0d0d"/>
+  
+  <!-- Central diamond/facet -->
+  <polygon points="60,50 70,60 60,70 50,60" fill="#1a1a1a"/>
+  
+  <!-- Faceted accents -->
+  <polygon points="60,25 72.5,42.5 60,60 47.5,42.5" fill="none" stroke="#3d3d3d" stroke-width="1"/>
+  <polygon points="60,40 70,55 60,70 50,55" fill="none" stroke="#525252" stroke-width="0.5"/>
+</svg>

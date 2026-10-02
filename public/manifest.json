@@ -1,0 +1,21 @@
+{
+  "name": "revamped.in",
+  "short_name": "revamped.in",
+  "description": "Exam photos. Signatures. Ready to submit. Free browser-based tool for Indian exam application photo and signature preparation.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d0d0d",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/branding/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "education"],
+  "lang": "en-IN",
+  "dir": "ltr"
+}

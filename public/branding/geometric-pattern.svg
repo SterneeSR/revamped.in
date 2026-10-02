@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <pattern id="hexagon-pattern" patternUnits="userSpaceOnUse" width="100" height="86.6">
+      <polygon points="50,0 100,43.3 100,129.9 50,173.2 0,129.9 0,43.3" fill="none" stroke="#0d1b2a" stroke-width="0.5" opacity="0.08"/>
+      <polygon points="50,0 100,43.3 100,129.9 50,173.2 0,129.9 0,43.3" fill="#1b998b" fill-opacity="0.03"/>
+    </pattern>
+    <pattern id="facet-pattern" patternUnits="userSpaceOnUse" width="80" height="80">
+      <polygon points="40,0 80,40 40,80 0,40" fill="none" stroke="#1b998b" stroke-width="0.3" opacity="0.06"/>
+      <polygon points="40,0 80,40 40,80 0,40" fill="#2ec4b6" fill-opacity="0.02"/>
+    </pattern>
+    <linearGradient id="accent-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1b2a;stop-opacity:0.08" />
+      <stop offset="50%" style="stop-color:#1b998b;stop-opacity:0.04" />
+      <stop offset="100%" style="stop-color:#2ec4b6;stop-opacity:0.02" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Subtle background -->
+  <rect width="400" height="400" fill="url(#accent-gradient)"/>
+  
+  <!-- Hexagonal tessellation -->
+  <rect width="400" height="400" fill="url(#hexagon-pattern)"/>
+  
+  <!-- Faceted accent elements -->
+  <g opacity="0.15">
+    <polygon points="200,50 250,100 200,150 150,100" fill="none" stroke="#1b998b" stroke-width="1.5"/>
+    <polygon points="200,150 250,200 200,250 150,200" fill="none" stroke="#2ec4b6" stroke-width="1"/>
+    <polygon points="200,250 250,300 200,350 150,300" fill="none" stroke="#e87d0e" stroke-width="0.8" opacity="0.5"/>
+  </g>
+  
+  <!-- Corner accent elements -->
+  <g opacity="0.1">
+    <polygon points="0,0 60,0 0,60" fill="#1b998b"/>
+    <polygon points="400,0 340,0 400,60" fill="#2ec4b6"/>
+    <polygon points="0,400 60,400 0,340" fill="#e87d0e"/>
+    <polygon points="400,400 340,400 400,340" fill="#ff6b6b"/>
+  </g>
+  
+  <!-- Central geometric sphere reference (brand mark) -->
+  <g transform="translate(200, 200)" opacity="0.08">
+    <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" fill="none" stroke="#0d1b2a" stroke-width="1"/>
+    <polygon points="0,-45 39,-22.5 39,22.5 0,45 -39,22.5 -39,-22.5" fill="none" stroke="#1b998b" stroke-width="0.5"/>
+    <polygon points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15" fill="#2ec4b6" fill-opacity="0.3"/>
+  </g>
+</svg>
