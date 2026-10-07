@@ -131,7 +131,7 @@ export default async function AdminDashboard() {
               recentChanges.map((exam) => (
                 <Link
                   key={exam.id}
-                  href={`/admin/exams/${exam.slug}`}
+                  href={`/admin/exams/${exam.id}`}
                   className="p-4 hover:bg-charcoal-50 transition-colors flex items-center justify-between"
                 >
                   <div>

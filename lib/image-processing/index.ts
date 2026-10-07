@@ -1,3 +1,12 @@
+export interface ImagePosition {
+  x?: number;
+  y?: number;
+  align?: 'left' | 'center' | 'right';
+  fontSize?: number;
+  font_size?: number;
+  color?: string;
+}
+
 export interface ImageRequirement {
   width: number;
   height: number;
@@ -6,20 +15,8 @@ export interface ImageRequirement {
   format: 'jpeg' | 'png';
   nameRequired: boolean;
   dateRequired: boolean;
-  namePosition?: {
-    x: number;
-    y: number;
-    align: 'left' | 'center' | 'right';
-    fontSize: number;
-    color: string;
-  };
-  datePosition?: {
-    x: number;
-    y: number;
-    align: 'left' | 'center' | 'right';
-    fontSize: number;
-    color: string;
-  };
+  namePosition?: ImagePosition | null;
+  datePosition?: ImagePosition | null;
 }
 
 export interface ProcessedImageResult {
@@ -124,34 +121,38 @@ export async function processImage(
     0, 0, requirement.width, requirement.height
   );
   
-  // Add name overlay if required
-  if (requirement.nameRequired && name && requirement.namePosition) {
-    const pos = requirement.namePosition;
-    ctx.font = `${pos.fontSize}px Arial, sans-serif`;
-    ctx.fillStyle = pos.color;
-    ctx.textAlign = pos.align;
-    ctx.textBaseline = 'top';
-    
-    let x = pos.x;
-    if (pos.align === 'center') x = requirement.width / 2;
-    else if (pos.align === 'right') x = requirement.width - pos.x;
-    
-    ctx.fillText(name, x, pos.y);
-  }
-  
-  // Add date overlay if required
-  if (requirement.dateRequired && date && requirement.datePosition) {
-    const pos = requirement.datePosition;
-    ctx.font = `${pos.fontSize}px Arial, sans-serif`;
-    ctx.fillStyle = pos.color;
-    ctx.textAlign = pos.align;
-    ctx.textBaseline = 'top';
-    
-    let x = pos.x;
-    if (pos.align === 'center') x = requirement.width / 2;
-    else if (pos.align === 'right') x = requirement.width - pos.x;
-    
-    ctx.fillText(date, x, pos.y);
+  // Draw bottom white banner for Name & Date if required (standard Indian exam format like TNPSC/SSC)
+  if ((requirement.nameRequired && name) || (requirement.dateRequired && date)) {
+    const bannerHeight = Math.max(26, Math.round(requirement.height * 0.22));
+    const bannerY = requirement.height - bannerHeight;
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, bannerY, requirement.width, bannerHeight);
+
+    // Optional subtle divider line
+    ctx.strokeStyle = '#E0E0E0';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, bannerY);
+    ctx.lineTo(requirement.width, bannerY);
+    ctx.stroke();
+
+    const fontSize = Math.max(9, Math.round(bannerHeight * 0.36));
+    ctx.font = `600 ${fontSize}px Arial, sans-serif`;
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    if (requirement.nameRequired && name && requirement.dateRequired && date) {
+      // Both name and date
+      ctx.fillText(name.toUpperCase(), requirement.width / 2, bannerY + bannerHeight * 0.32);
+      ctx.font = `500 ${Math.max(8, fontSize - 1)}px Arial, sans-serif`;
+      ctx.fillText(date, requirement.width / 2, bannerY + bannerHeight * 0.72);
+    } else if (requirement.nameRequired && name) {
+      ctx.fillText(name.toUpperCase(), requirement.width / 2, bannerY + bannerHeight * 0.5);
+    } else if (requirement.dateRequired && date) {
+      ctx.fillText(date, requirement.width / 2, bannerY + bannerHeight * 0.5);
+    }
   }
   
   // Convert to blob with compression
@@ -180,36 +181,49 @@ async function compressToTargetSize(
   const targetMax = requirement.maxKB * 1024;
   const format = `image/${requirement.format}`;
   
-  // Start with high quality
-  let quality = 0.9;
-  let blob: Blob;
-  let attempts = 0;
-  const maxAttempts = 20;
-  
-  do {
-    blob = await new Promise<Blob>((resolve) => {
-      canvas.toBlob((b) => resolve(b!), format, quality);
+  // Binary search quality for optimal file size matching target range
+  let low = 0.05;
+  let high = 0.98;
+  let bestBlob: Blob | null = null;
+  let minDiff = Infinity;
+
+  for (let i = 0; i < 15; i++) {
+    const midQuality = (low + high) / 2;
+    const blob = await new Promise<Blob>((resolve) => {
+      canvas.toBlob((b) => resolve(b!), format, midQuality);
     });
-    
+
+    if (!blob) break;
+
     const size = blob.size;
     
+    // Check if within bounds
     if (size >= targetMin && size <= targetMax) {
       return blob;
     }
-    
-    if (size > targetMax) {
-      // Too large - reduce quality
-      quality *= 0.85;
-    } else if (size < targetMin) {
-      // Too small - increase quality (but cap at 0.95)
-      quality = Math.min(quality * 1.15, 0.95);
+
+    // Keep track of closest blob to target range
+    const diff = size < targetMin ? targetMin - size : size - targetMax;
+    if (diff < minDiff) {
+      minDiff = diff;
+      bestBlob = blob;
     }
-    
-    attempts++;
-  } while (attempts < maxAttempts);
-  
-  // If we couldn't hit the target, return the closest
-  return blob!;
+
+    if (size > targetMax) {
+      high = midQuality;
+    } else {
+      low = midQuality;
+    }
+  }
+
+  // If even at highest quality mid is still smaller than targetMin, return highest quality
+  if (bestBlob) {
+    return bestBlob;
+  }
+
+  return new Promise<Blob>((resolve) => {
+    canvas.toBlob((b) => resolve(b!), format, 0.9);
+  });
 }
 
 function validateResult(
@@ -245,7 +259,6 @@ function validateResult(
     errors.push('Date is required but not provided');
   }
   
-  // Dimensions are always valid since we enforce them
   const dimensionsValid = true;
   
   return {

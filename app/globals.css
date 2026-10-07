@@ -1,3 +1,39 @@
+@import 'react-image-crop/dist/ReactCrop.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl border border-charcoal-200 shadow-sm;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-150 hover:border-charcoal-400 hover:shadow-md;
+  }
+
+  .input-field {
+    @apply w-full rounded-lg border border-charcoal-300 px-3.5 py-2.5 text-sm text-charcoal-900 placeholder-charcoal-400 bg-white transition-colors focus:border-charcoal-900 focus:outline-none focus:ring-1 focus:ring-charcoal-900 disabled:bg-charcoal-50 disabled:text-charcoal-400;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center font-medium rounded-lg bg-charcoal-900 text-white border border-charcoal-900 hover:bg-charcoal-800 hover:border-charcoal-800 px-4 py-2 text-sm transition-colors;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center font-medium rounded-lg bg-white text-charcoal-900 border border-charcoal-300 hover:bg-charcoal-50 px-4 py-2 text-sm transition-colors;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center font-medium rounded-lg bg-transparent text-charcoal-600 hover:text-charcoal-900 hover:bg-charcoal-100 px-3 py-1.5 text-sm transition-colors;
+  }
+
+  .ad-slot {
+    @apply relative overflow-hidden rounded-xl border border-dashed border-charcoal-300 bg-charcoal-50/50 flex flex-col items-center justify-center min-h-[90px] w-full p-2;
+  }
+
+  .ad-label {
+    @apply text-[10px] uppercase font-mono tracking-wider text-charcoal-400 mb-1 select-none pointer-events-none;
+  }
+}

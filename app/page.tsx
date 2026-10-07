@@ -5,6 +5,7 @@ import { Logo } from '@/components/branding/Logo';
 import { GeometricAccent } from '@/components/geometric/GeometricAccent';
 import { AdSlotHomepage } from '@/components/ads/AdSlot';
 import { Button } from '@/components/ui/Button';
+import { ExamSearchSection } from '@/components/homepage/ExamSearchSection';
 
 export const metadata: Metadata = {
   title: 'Exam photos. Signatures. Ready to submit.',
@@ -69,80 +70,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Exam Search */}
-      <section id="exams" className="py-20 md:py-28" aria-labelledby="exams-heading">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 id="exams-heading" className="text-3xl md:text-4xl font-bold text-charcoal-900 mb-4">
-              Find your exam
-            </h2>
-            <p className="text-charcoal-600 max-w-2xl mx-auto">
-              Search for your examination or browse popular options below. Each exam page shows exact requirements and provides the preparation tool.
-            </p>
-          </div>
-          
-          {/* Search Input */}
-          <div className="max-w-xl mx-auto mb-16">
-            <div className="relative">
-              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-charcoal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="search"
-                id="exam-search"
-                placeholder="Search exams: TNPSC, UPSC, SSC, IBPS, RRB, AFCAT..."
-                className="input-field pl-12 pr-4"
-                aria-label="Search exams"
-              />
-            </div>
-            <p className="mt-2 text-xs text-charcoal-500 text-center">
-              Search by exam name, organization, or keyword
-            </p>
-          </div>
-
-          {/* Popular Exams Grid */}
-          <div>
-            <h3 className="text-lg font-semibold text-charcoal-900 mb-6">Popular Exams</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" role="list">
-              {popularExams.map((exam) => (
-                <Link
-                  key={exam.slug}
-                  href={`/${exam.slug}`}
-                  className="card-hover p-6 flex items-center gap-4 group"
-                  role="listitem"
-                >
-                  <div className="w-14 h-14 rounded-xl bg-charcoal-100 flex items-center justify-center group-hover:bg-charcoal-200 transition-colors">
-                    <Logo size="lg" className="text-charcoal-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-charcoal-900 group-hover:text-charcoal-700 transition-colors truncate">
-                      {exam.name}
-                    </h4>
-                    <p className="text-sm text-charcoal-500">{exam.org}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {exam.tools.map((tool) => (
-                      <span
-                        key={tool}
-                        className="px-2.5 py-1 text-xs font-medium text-charcoal-700 bg-charcoal-100 rounded-full"
-                      >
-                        {tool}
-                      </span>
-                    ))}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* All Exams Link */}
-          <div className="mt-12 text-center">
-            <Link href="#all-exams" className="btn-ghost">
-              View all exams ({exams.length})
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Exam Search and Selection */}
+      <ExamSearchSection exams={exams} />
 
       {/* How it Works */}
       <section className="py-20 md:py-28 bg-charcoal-50" aria-labelledby="how-heading">

@@ -23,41 +23,41 @@ export function Logo({ size = 'md', className }: LogoProps) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      {/* Outer hexagon */}
-      <polygon
-        points="60,10 110,35 110,85 60,110 10,85 10,35"
-        stroke="#0d0d0d"
-        strokeWidth="3"
-      />
-      {/* Middle hexagon */}
-      <polygon
-        points="60,25 95,47.5 95,72.5 60,95 25,72.5 25,47.5"
-        stroke="#1a1a1a"
-        strokeWidth="2"
-      />
-      {/* Inner hexagon */}
-      <polygon
-        points="60,40 80,55 80,70 60,85 40,70 40,55"
-        fill="#0d0d0d"
-      />
-      {/* Central diamond/facet */}
-      <polygon
-        points="60,50 70,60 60,70 50,60"
-        fill="#1a1a1a"
-      />
-      {/* Faceted accents */}
-      <polygon
-        points="60,25 72.5,42.5 60,60 47.5,42.5"
-        stroke="#3d3d3d"
-        strokeWidth="1"
-        fill="none"
-      />
-      <polygon
-        points="60,40 70,55 60,70 50,55"
-        stroke="#525252"
-        strokeWidth="0.5"
-        fill="none"
-      />
+      <g transform="translate(60, 60)">
+        {/* Top Cap Facets */}
+        <polygon points="0,-52 23,-46 0,-33" fill="#2d2d2d" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="0,-52 -23,-46 0,-33" fill="#383838" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="23,-46 42,-31 26,-20" fill="#1c1c1c" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="-23,-46 -42,-31 -26,-20" fill="#444444" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+
+        {/* Upper Middle Facets */}
+        <polygon points="0,-33 26,-20 0,0" fill="#202020" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="0,-33 -26,-20 0,0" fill="#303030" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="26,-20 42,-31 51,-12 36,0" fill="#181818" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="-26,-20 -42,-31 -51,-12 -36,0" fill="#3a3a3a" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="26,-20 36,0 0,0" fill="#151515" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="-26,-20 -36,0 0,0" fill="#282828" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+
+        {/* Outer Equator Rim Facets */}
+        <polygon points="42,-31 51,-12 52,12 38,18" fill="#111111" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="-42,-31 -51,-12 -52,12 -38,18" fill="#4a4a4a" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+
+        {/* Lower Middle Facets */}
+        <polygon points="0,0 36,0 26,20" fill="#121212" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="0,0 -36,0 -26,20" fill="#222222" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="0,0 26,20 0,33" fill="#181818" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="0,0 -26,20 0,33" fill="#2b2b2b" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="36,0 51,12 38,28 26,20" fill="#0f0f0f" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="-36,0 -51,12 -38,28 -26,20" fill="#323232" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+
+        {/* Bottom Cap Facets */}
+        <polygon points="0,33 26,20 42,31 23,46" fill="#141414" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="0,33 -26,20 -42,31 -23,46" fill="#262626" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="0,33 23,46 0,52" fill="#191919" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="0,33 -23,46 0,52" fill="#242424" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="26,20 38,28 42,31" fill="#0d0d0d" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+        <polygon points="-26,20 -38,28 -42,31" fill="#2e2e2e" stroke="#141414" strokeWidth="0.75" strokeLinejoin="round" />
+      </g>
     </svg>
   );
 }
@@ -71,9 +71,9 @@ export function LogoWithText({ size = 'md', className }: LogoProps) {
   };
 
   return (
-    <div className={clsx('flex items-center gap-2', className)}>
+    <div className={clsx('flex items-center gap-2.5', className)}>
       <Logo size={size} />
-      <span className={clsx('font-semibold tracking-tight text-charcoal-900', textSizes[size])}>
+      <span className={clsx('font-bold tracking-tight text-charcoal-900', textSizes[size])}>
         revamped.in
       </span>
     </div>
