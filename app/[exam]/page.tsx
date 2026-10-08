@@ -2,10 +2,8 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getExamWithApplications } from '@/lib/supabase/queries';
-import { Logo } from '@/components/branding/Logo';
-import { GeometricAccent } from '@/components/geometric/GeometricAccent';
 import { AdSlotExamPage } from '@/components/ads/AdSlot';
-import { Button } from '@/components/ui/Button';
+import { GeometricAccent } from '@/components/geometric/GeometricAccent';
 
 interface ExamPageProps {
   params: Promise<{ exam: string }>;
@@ -13,158 +11,170 @@ interface ExamPageProps {
 
 export async function generateMetadata({ params }: ExamPageProps): Promise<Metadata> {
   const { exam } = await params;
+  const examData = await getExamWithApplications(exam);
+  if (!examData) {
+    return { title: 'Exam Not Found | revamped.in' };
+  }
   return {
-    title: exam.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-    description: `Photo and signature requirements for ${exam.replace(/-/g, ' ')}. Resize and prepare your exam application files.`,
+    title: `${examData.name} Photo & Signature Resize Requirements`,
+    description: `Official photo and signature dimensions, file size, and format specifications for ${examData.name} (${examData.organization}). Free online preparation utility.`,
   };
 }
 
 export default async function ExamPage({ params }: ExamPageProps) {
   const { exam: examSlug } = await params;
   const examData = await getExamWithApplications(examSlug);
-  
+
   if (!examData) {
     notFound();
   }
 
-  const currentApp = examData.applications.find(app => app.is_current);
-  const activeApps = examData.applications.filter(app => app.status === 'active' || app.status === 'closed');
+  const currentApp = examData.applications.find((app) => app.is_current);
 
   return (
-    <div className="relative min-h-screen">
-      <GeometricAccent variant="hero" className="absolute top-0 left-0 right-0 h-64 -z-10" />
-      
-      {/* Hero */}
-      <header className="relative py-16 md:py-24" aria-labelledby="exam-title">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Logo size="lg" />
-            <span className="text-sm font-medium text-charcoal-500 uppercase tracking-wider">
-              {examData.organization}
-            </span>
-          </div>
-          <h1 id="exam-title" className="text-3xl md:text-5xl font-bold text-charcoal-900 mb-4 text-balance">
-            {examData.name}
-          </h1>
-          {examData.description && (
-            <p className="text-lg text-charcoal-600 max-w-2xl mb-6">
-              {examData.description}
-            </p>
-          )}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-charcoal-500">
-            {currentApp && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full">
-                <span className="w-2 h-2 rounded-full bg-green-500" aria-hidden="true"></span>
-                Current: {currentApp.name}
-              </span>
-            )}
-            {examData.official_website && (
-              <Link
-                href={examData.official_website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-charcoal-900 transition-colors underline underline-offset-2"
-              >
-                Official website →
-              </Link>
-            )}
-          </div>
+    <div className="min-h-screen bg-white">
+      {/* Top Banner / Breadcrumb Header */}
+      <section className="relative border-b border-neutral-200 bg-neutral-50/50 py-10 md:py-14 overflow-hidden">
+        {/* Subtle Geometric Tessellation top right */}
+        <div className="absolute top-0 right-0 w-72 h-72 pointer-events-none opacity-40">
+          <GeometricAccent variant="hero" className="w-full h-full" />
         </div>
-      </header>
 
-      {/* Ad Slot */}
-      <section className="py-6 border-y border-charcoal-200" aria-label="Advertisement">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AdSlotExamPage />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-xs text-neutral-500 mb-4" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-neutral-900 transition-colors">Home</Link>
+            <span>/</span>
+            <Link href="/#exams" className="hover:text-neutral-900 transition-colors">Exams</Link>
+            <span>/</span>
+            <span className="text-neutral-900 font-semibold">{examData.name}</span>
+          </nav>
+
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-2.5 mb-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-neutral-900 text-white">
+                  {examData.organization}
+                </span>
+                {currentApp && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                    Current: {currentApp.name}
+                  </span>
+                )}
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-950">
+                {examData.name}
+              </h1>
+              {examData.description && (
+                <p className="text-sm md:text-base text-neutral-600 mt-2 max-w-2xl leading-relaxed">
+                  {examData.description}
+                </p>
+              )}
+            </div>
+
+            {examData.official_website && (
+              <div className="shrink-0">
+                <Link
+                  href={examData.official_website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-neutral-300 text-xs font-semibold text-neutral-800 hover:border-neutral-900 hover:bg-neutral-50 transition-all shadow-sm"
+                >
+                  <span>Official Website</span>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* Applications */}
-      <main className="py-16 md:py-24">
+      {/* Ad slot */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <AdSlotExamPage />
+      </div>
+
+      {/* Application Cycles Grid */}
+      <section className="py-10 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-charcoal-900 mb-4">
-              Application Cycles
+          <div className="mb-8">
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-neutral-950">
+              Application Cycles & Notifications
             </h2>
-            <p className="text-charcoal-600 max-w-2xl">
-              Select the application cycle to view exact requirements and access the preparation tools.
+            <p className="text-sm text-neutral-500 mt-1">
+              Select your application notification cycle to prepare compliant photographs and signatures.
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {examData.applications.map((app) => (
               <Link
                 key={app.id}
                 href={`/${examSlug}/${app.slug}`}
-                className={`card p-6 relative overflow-hidden ${app.is_current ? 'ring-2 ring-green-500' : ''}`}
+                className={`group p-6 rounded-2xl border transition-all flex flex-col justify-between ${
+                  app.is_current
+                    ? 'border-neutral-900 ring-1 ring-neutral-900 bg-white shadow-sm'
+                    : 'border-neutral-200 bg-white hover:border-neutral-400 hover:shadow-sm'
+                }`}
               >
-                {app.is_current && (
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-green-500 opacity-10" aria-hidden="true" />
-                )}
-                <div className="relative z-10">
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-charcoal-900 mb-1">
-                        {app.name}
-                      </h3>
-                      {app.notification_cycle && (
-                        <p className="text-sm text-charcoal-500">
-                          Notification: {app.notification_cycle}
-                        </p>
-                      )}
-                    </div>
-                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full shrink-0 ${
-                      app.status === 'active' ? 'bg-green-50 text-green-700' :
-                      app.status === 'upcoming' ? 'bg-blue-50 text-blue-700' :
-                      app.status === 'closed' ? 'bg-charcoal-100 text-charcoal-700' :
-                      'bg-amber-50 text-amber-700'
-                    }`}>
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold capitalize ${
+                        app.status === 'active'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : app.status === 'upcoming'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'bg-neutral-100 text-neutral-600'
+                      }`}
+                    >
                       {app.status}
                     </span>
+                    {app.is_current && (
+                      <span className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                        Current
+                      </span>
+                    )}
                   </div>
-                  
-                  {app.effective_date && (
-                    <p className="text-sm text-charcoal-500 mb-4">
-                      Effective: {new Date(app.effective_date).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </p>
-                  )}
-                  
-                  {app.verified_at && (
-                    <p className="text-xs text-charcoal-400 mb-4">
-                      Last verified: {new Date(app.verified_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
+
+                  <h3 className="text-lg font-bold text-neutral-950 group-hover:text-neutral-700 transition-colors">
+                    {app.name}
+                  </h3>
+
+                  {app.notification_cycle && (
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Cycle: {app.notification_cycle}
                     </p>
                   )}
 
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 text-xs font-medium text-charcoal-700 bg-charcoal-100 rounded-full">
-                      Photo
-                    </span>
-                    <span className="px-2.5 py-1 text-xs font-medium text-charcoal-700 bg-charcoal-100 rounded-full">
-                      Signature
-                    </span>
+                  {app.verified_at && (
+                    <p className="text-[11px] text-neutral-400 mt-3">
+                      Verified: {new Date(app.verified_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </p>
+                  )}
+                </div>
+
+                <div className="pt-6 border-t border-neutral-100 mt-6 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-neutral-100 text-neutral-700">Photo</span>
+                    <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-neutral-100 text-neutral-700">Signature</span>
                   </div>
+                  <span className="text-xs font-semibold text-neutral-900 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                    Prepare Tools →
+                  </span>
                 </div>
               </Link>
             ))}
           </div>
 
           {examData.applications.length === 0 && (
-            <div className="text-center py-16">
-              <GeometricAccent variant="empty" className="mb-6" />
-              <h3 className="text-lg font-medium text-charcoal-900 mb-2">No application cycles yet</h3>
-              <p className="text-charcoal-600">Application cycles will appear here when available.</p>
+            <div className="p-12 text-center border border-dashed border-neutral-300 rounded-2xl text-neutral-500">
+              No application cycles configured for this exam yet.
             </div>
           )}
-        </div>
-      </main>
-
-      {/* Privacy Note */}
-      <section className="py-12 bg-charcoal-50 border-t border-charcoal-200" aria-labelledby="privacy-note">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 id="privacy-note" className="text-lg font-semibold text-charcoal-900 mb-2">Privacy</h2>
-          <p className="text-charcoal-600 text-sm">
-            Your images are processed in your browser and are not uploaded to our servers.
-          </p>
         </div>
       </section>
     </div>

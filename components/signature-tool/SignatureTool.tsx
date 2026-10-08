@@ -1,135 +1,135 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { Button } from '@/components/ui/Button';
-import { GeometricAccent } from '@/components/geometric/GeometricAccent';
-import { processImage, type ImageRequirement, type ProcessedImageResult, type CropData, getDefaultCrop, loadImage } from '@/lib/image-processing';
 import ReactCrop from 'react-image-crop';
+import {
+  processImage,
+  type ImageRequirement,
+  type ProcessedImageResult,
+  type CropData,
+  getDefaultCrop,
+  loadImage,
+} from '@/lib/image-processing';
 
 interface SignatureToolProps {
   requirement: ImageRequirement;
   examName: string;
   appName: string;
+  officialSourceUrl?: string | null;
+  verifiedAt?: string | null;
+  additionalInstructions?: string | null;
 }
 
-export function SignatureTool({ requirement, examName, appName }: SignatureToolProps) {
+export function SignatureTool({
+  requirement,
+  examName,
+  appName,
+  officialSourceUrl,
+  verifiedAt,
+  additionalInstructions,
+}: SignatureToolProps) {
   const [file, setFile] = useState<File | null>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [crop, setCrop] = useState<CropData | null>(null);
   const [cropPercent, setCropPercent] = useState<CropData | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [rotate, setRotate] = useState(0);
   const [format, setFormat] = useState<'jpeg' | 'png'>('jpeg');
   const [result, setResult] = useState<ProcessedImageResult | null>(null);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [step, setStep] = useState<'upload' | 'crop' | 'result'>('upload');
   const imgRef = useRef<HTMLImageElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle file upload
-  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
+  const handleFileChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selectedFile = e.target.files?.[0];
+      if (!selectedFile) return;
 
-    if (!selectedFile.type.startsWith('image/')) {
-      setError('Please select a valid image file');
-      return;
-    }
+      if (!selectedFile.type.startsWith('image/')) {
+        setError('Please upload a valid image file (JPG or PNG).');
+        return;
+      }
 
-    if (selectedFile.size > 20 * 1024 * 1024) {
-      setError('File size must be less than 20 MB');
-      return;
-    }
+      if (selectedFile.size > 20 * 1024 * 1024) {
+        setError('File size must be under 20 MB.');
+        return;
+      }
 
-    setError(null);
-    setFile(selectedFile);
-    
-    try {
-      const loadedImage = await loadImage(selectedFile);
-      setImage(loadedImage);
-      
-      const defaultCrop = getDefaultCrop(loadedImage, requirement.width, requirement.height);
-      setCrop(defaultCrop);
-      
-      setCropPercent({
-        x: (defaultCrop.x / loadedImage.width) * 100,
-        y: (defaultCrop.y / loadedImage.height) * 100,
-        width: (defaultCrop.width / loadedImage.width) * 100,
-        height: (defaultCrop.height / loadedImage.height) * 100,
-      });
-      
-      setStep('crop');
-      setResult(null);
-    } catch {
-      setError('Failed to load image. Please try another file.');
-    }
-  }, [requirement.width, requirement.height]);
+      setError(null);
+      setFile(selectedFile);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+      try {
+        const loaded = await loadImage(selectedFile);
+        setImage(loaded);
+        const defaultCrop = getDefaultCrop(loaded, requirement.width, requirement.height);
+        setCrop(defaultCrop);
+        setCropPercent({
+          x: (defaultCrop.x / loaded.width) * 100,
+          y: (defaultCrop.y / loaded.height) * 100,
+          width: (defaultCrop.width / loaded.width) * 100,
+          height: (defaultCrop.height / loaded.height) * 100,
+        });
+
+        const res = await processImage(loaded, defaultCrop, {
+          ...requirement,
+          format,
+          nameRequired: false,
+          dateRequired: false,
+        });
+        setResult(res);
+      } catch {
+        setError('Failed to parse uploaded signature image.');
+      }
+    },
+    [requirement, format]
+  );
+
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-  }, []);
+  };
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) {
-      const event = { target: { files: [droppedFile] } } as unknown as React.ChangeEvent<HTMLInputElement>;
+    if (droppedFile && fileInputRef.current) {
+      const event = {
+        target: { files: [droppedFile] },
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
       handleFileChange(event);
     }
-  }, [handleFileChange]);
+  };
 
-  const handleCropChange = useCallback((newCrop: CropData) => {
-    setCropPercent(newCrop);
-    if (image) {
-      setCrop({
-        x: (newCrop.x / 100) * image.width,
-        y: (newCrop.y / 100) * image.height,
-        width: (newCrop.width / 100) * image.width,
-        height: (newCrop.height / 100) * image.height,
-      });
-    }
-  }, [image]);
+  const handleCropComplete = useCallback(
+    async (_crop: CropData, percentCrop: CropData) => {
+      setCropPercent(percentCrop);
+      if (image) {
+        const absoluteCrop = {
+          x: (percentCrop.x / 100) * image.width,
+          y: (percentCrop.y / 100) * image.height,
+          width: (percentCrop.width / 100) * image.width,
+          height: (percentCrop.height / 100) * image.height,
+        };
+        setCrop(absoluteCrop);
 
-  const handleCropComplete = useCallback((_newCrop: CropData, percentCrop: CropData) => {
-    setCropPercent(percentCrop);
-    if (image) {
-      setCrop({
-        x: (percentCrop.x / 100) * image.width,
-        y: (percentCrop.y / 100) * image.height,
-        width: (percentCrop.width / 100) * image.width,
-        height: (percentCrop.height / 100) * image.height,
-      });
-    }
-  }, [image]);
+        try {
+          const res = await processImage(image, absoluteCrop, {
+            ...requirement,
+            format,
+            nameRequired: false,
+            dateRequired: false,
+          });
+          setResult(res);
+        } catch {
+          // auto crop error
+        }
+      }
+    },
+    [image, requirement, format]
+  );
 
-  const handleProcess = useCallback(async () => {
-    if (!image || !crop) return;
-    
-    setProcessing(true);
-    setError(null);
-    
-    try {
-      const processed = await processImage(image, crop, {
-        ...requirement,
-        format,
-        nameRequired: false,
-        dateRequired: false,
-      });
-      
-      setResult(processed);
-      setStep('result');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Processing failed');
-    } finally {
-      setProcessing(false);
-    }
-  }, [image, crop, requirement, format]);
-
-  const handleDownload = useCallback(() => {
+  const handleDownload = () => {
     if (!result) return;
-    
     const url = URL.createObjectURL(result.blob);
     const a = document.createElement('a');
     a.href = url;
@@ -138,260 +138,301 @@ export function SignatureTool({ requirement, examName, appName }: SignatureToolP
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [result, examName, appName, format]);
+  };
 
-  const handleReset = useCallback(() => {
+  const handleReset = () => {
     setFile(null);
     setImage(null);
     setCrop(null);
     setCropPercent(null);
     setZoom(1);
+    setRotate(0);
     setResult(null);
     setError(null);
-    setStep('upload');
-    if (imgRef.current) {
-      imgRef.current.src = '';
-    }
-  }, []);
+  };
 
-  if (step === 'upload') {
-    return (
-      <div className="card p-6 md:p-8">
-        <div
-          className="border-2 border-dashed border-charcoal-200 rounded-xl p-8 md:p-12 text-center hover:border-charcoal-400 transition-colors cursor-pointer"
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && sigFileInputRef.current?.click()}
-        >
-          <input
-            ref={sigFileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="sr-only"
-            id="signature-upload"
-            aria-label="Upload signature"
-          />
-          <label htmlFor="signature-upload" className="cursor-pointer">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-charcoal-100 flex items-center justify-center">
-              <svg className="w-8 h-8 text-charcoal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+  return (
+    <div className="space-y-6">
+      {/* 1. REQUIREMENT BAR */}
+      <div className="bg-white border border-neutral-200 rounded-2xl p-4 md:p-5 shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-neutral-100">
+          <div className="flex items-center gap-3 pr-2">
+            <div className="w-9 h-9 rounded-xl bg-neutral-900 text-white flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-charcoal-900 mb-2">Upload Signature</h3>
-            <p className="text-charcoal-600 text-sm mb-4">
-              Drag and drop or click to select<br />
-              <span className="text-xs">JPG, PNG up to 20 MB</span>
-            </p>
-            <p className="text-xs text-charcoal-400">
-              Your image is processed in your browser and never uploaded to our servers.
-            </p>
-          </label>
-        </div>
-        
-        {error && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm" role="alert">
-            {error}
+            <div>
+              <div className="text-xs font-bold text-neutral-900 leading-tight">Signature Requirements</div>
+              <div className="text-[11px] text-neutral-500 truncate mt-0.5">{appName}</div>
+            </div>
           </div>
-        )}
+
+          <div className="sm:pl-4 flex items-center gap-2.5 pt-2 sm:pt-0">
+            <div className="text-neutral-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase font-mono text-neutral-400 font-semibold">Dimensions</div>
+              <div className="text-xs font-bold text-neutral-900 font-mono">{requirement.width} × {requirement.height} px</div>
+            </div>
+          </div>
+
+          <div className="sm:pl-4 flex items-center gap-2.5 pt-2 sm:pt-0">
+            <div className="text-neutral-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase font-mono text-neutral-400 font-semibold">File size</div>
+              <div className="text-xs font-bold text-neutral-900 font-mono">{requirement.minKB} – {requirement.maxKB} KB</div>
+            </div>
+          </div>
+
+          <div className="sm:pl-4 flex items-center gap-2.5 pt-2 sm:pt-0">
+            <div className="text-neutral-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase font-mono text-neutral-400 font-semibold">Format</div>
+              <div className="text-xs font-bold text-neutral-900 uppercase">{requirement.format}</div>
+            </div>
+          </div>
+        </div>
       </div>
-    );
-  }
 
-  if (step === 'crop') {
-    return (
-      <div className="card overflow-hidden">
-        {/* Toolbar */}
-        <div className="border-b border-charcoal-200 p-4 flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label htmlFor="sig-zoom" className="text-sm font-medium text-charcoal-700">Zoom</label>
-            <input
-              id="sig-zoom"
-              type="range"
-              min="0.5"
-              max="3"
-              step="0.1"
-              value={zoom}
-              onChange={(e) => setZoom(parseFloat(e.target.value))}
-              className="w-32 h-2 accent-charcoal-900"
-              aria-label="Zoom level"
-            />
-            <span className="text-sm text-charcoal-500 w-10 text-right">{Math.round(zoom * 100)}%</span>
-          </div>
-          
-          <div className="flex-1" />
-          
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-charcoal-700">Format</label>
-            <select
-              value={format}
-              onChange={(e) => setFormat(e.target.value as 'jpeg' | 'png')}
-              className="input-field py-1.5 px-3 text-sm w-auto"
+      {/* 2. WORKSPACE GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Upload & Adjust */}
+        <div className="lg:col-span-4 space-y-4">
+          <div className="bg-white border border-neutral-200 rounded-2xl p-5 shadow-sm space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-neutral-900 text-white text-[11px] font-bold flex items-center justify-center shrink-0">1</span>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-900">Upload Signature</h3>
+            </div>
+
+            <div
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-neutral-200 hover:border-neutral-900 rounded-xl p-6 text-center cursor-pointer transition-colors bg-neutral-50/50"
             >
-              <option value="jpeg">JPEG</option>
-              <option value="png">PNG</option>
-            </select>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+                id="sig-file-upload"
+              />
+              <div className="w-10 h-10 mx-auto rounded-full bg-white border border-neutral-200 flex items-center justify-center text-neutral-600 mb-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </div>
+              <p className="text-xs font-semibold text-neutral-900">Drag & drop signature here</p>
+              <p className="text-[11px] text-neutral-500 mt-0.5">or click to browse</p>
+              <p className="text-[10px] text-neutral-400 mt-2 font-mono">JPG, PNG (Max 20 MB)</p>
+            </div>
+          </div>
+
+          {/* Adjust Controls */}
+          <div className="bg-white border border-neutral-200 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-neutral-900 text-white text-[11px] font-bold flex items-center justify-center shrink-0">2</span>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-900">Crop & Align</h3>
+              </div>
+              {image && (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="text-[11px] text-neutral-400 hover:text-neutral-900 font-medium"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+
+            <div>
+              <div className="flex justify-between text-xs text-neutral-600 mb-1.5 font-medium">
+                <span>Zoom</span>
+                <span className="font-mono text-neutral-900">{Math.round(zoom * 100)}%</span>
+              </div>
+              <input
+                type="range"
+                min="0.5"
+                max="3"
+                step="0.1"
+                value={zoom}
+                onChange={(e) => setZoom(parseFloat(e.target.value))}
+                className="w-full accent-neutral-900 cursor-pointer h-1.5 bg-neutral-200 rounded-lg"
+              />
+            </div>
+
+            <div>
+              <div className="text-xs text-neutral-600 mb-1.5 font-medium">Rotate</div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRotate((r) => (r - 90) % 360)}
+                  className="flex-1 py-1.5 rounded-lg border border-neutral-200 text-xs font-medium hover:border-neutral-900 text-neutral-700"
+                >
+                  ↺ -90°
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRotate((r) => (r + 90) % 360)}
+                  className="flex-1 py-1.5 rounded-lg border border-neutral-200 text-xs font-medium hover:border-neutral-900 text-neutral-700"
+                >
+                  ↻ +90°
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setRotate(0); setZoom(1); }}
+                  className="px-3 py-1.5 rounded-lg border border-neutral-200 text-xs font-medium hover:border-neutral-900 text-neutral-700"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Cropper */}
-        <div className="relative bg-charcoal-100 min-h-[400px] flex items-center justify-center p-4">
-          {image && cropPercent && (
-            <div className="max-w-full max-h-[60vh]">
-              <ReactCrop
-                src={URL.createObjectURL(file!)}
-                crop={cropPercent}
-                onChange={handleCropChange}
-                onComplete={handleCropComplete}
-                aspect={requirement.width / requirement.height}
-                minSize={[50, 50]}
-                zoom={zoom}
-                ruleOfThirds
-                circularCrop={false}
-                keepSelection
-              >
-              <img
-                ref={imgRef}
-                src={URL.createObjectURL(file!)}
-                alt="Signature preview for cropping"
-                style={{ maxWidth: '100%', maxHeight: '60vh', transform: `scale(${zoom})` }}
-              />
-            </ReactCrop>
+        {/* Center/Right Column: Interactive Crop Canvas */}
+        <div className="lg:col-span-8 bg-white border border-neutral-200 rounded-2xl p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-900">
+              Interactive Signature Crop
+            </h3>
+            <span className="text-xs font-mono text-neutral-500">
+              Aspect Ratio: {requirement.width} × {requirement.height} px
+            </span>
           </div>
+
+          <div className="relative min-h-[300px] md:min-h-[360px] bg-neutral-100 border border-neutral-200 rounded-xl overflow-hidden flex items-center justify-center p-4">
+            {image && cropPercent && file ? (
+              <div className="max-w-full max-h-[400px]">
+                <ReactCrop
+                  crop={cropPercent}
+                  onChange={(c, pc) => setCropPercent(pc)}
+                  onComplete={handleCropComplete}
+                  aspect={requirement.width / requirement.height}
+                  keepSelection
+                >
+                  <img
+                    ref={imgRef}
+                    src={URL.createObjectURL(file)}
+                    alt="Signature crop input"
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '360px',
+                      transform: `scale(${zoom}) rotate(${rotate}deg)`,
+                      transition: 'transform 100ms ease-out',
+                    }}
+                  />
+                </ReactCrop>
+              </div>
+            ) : (
+              <div className="text-center p-8 text-neutral-400">
+                <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-neutral-200/60 flex items-center justify-center text-neutral-500">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-neutral-700">No signature uploaded</p>
+                <p className="text-xs text-neutral-500 mt-1">
+                  Upload a scanned signature or phone photo on plain white paper.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between text-xs text-neutral-600 bg-neutral-50 px-4 py-2.5 rounded-xl border border-neutral-200 font-mono">
+            <span>{requirement.width} × {requirement.height} px</span>
+            <span>{result ? `${result.fileSizeKB} KB` : '– KB'}</span>
+            <span className="uppercase font-semibold">{format}</span>
+          </div>
+
+          {additionalInstructions && (
+            <p className="text-xs text-neutral-500 bg-neutral-50/70 p-3 rounded-lg border border-neutral-200">
+              <strong>Official Note:</strong> {additionalInstructions}
+            </p>
           )}
         </div>
-
-        {/* Action Buttons */}
-        <div className="p-4 border-t border-charcoal-200 flex flex-wrap items-center justify-between gap-4">
-          <Button variant="ghost" onClick={handleReset}>
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Start Over
-          </Button>
-          <Button onClick={handleProcess} loading={processing} className="ml-auto">
-            Process & Validate
-          </Button>
-        </div>
-
-        {error && (
-          <div className="mx-4 mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm" role="alert">
-            {error}
-          </div>
-        )}
       </div>
-    );
-  }
 
-  // Result step
-  if (step === 'result' && result) {
-    const { validation } = result;
-    
-    return (
-      <div className="card overflow-hidden">
-        {/* Result Preview */}
-        <div className="bg-charcoal-100 p-4 flex items-center justify-center">
-          <img
-            src={result.dataUrl}
-            alt="Processed signature preview"
-            className="max-w-full max-h-64 border border-charcoal-200 bg-white"
-            style={{ imageRendering: 'pixelated' }}
-          />
-        </div>
+      {/* 3. VALIDATION & DOWNLOAD */}
+      <div className="bg-white border border-neutral-200 rounded-2xl p-5 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-neutral-900 text-white text-[11px] font-bold flex items-center justify-center shrink-0">3</span>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-900">Validate & Download</h3>
+            </div>
 
-        {/* Validation Results */}
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-charcoal-900">Validation Results</h3>
-            <div className={`px-3 py-1 rounded-full text-sm font-medium ${validation.overall ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-              {validation.overall ? '✓ READY TO DOWNLOAD' : '✗ ISSUES FOUND'}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+              <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200 flex items-start gap-2">
+                <span className={`text-sm ${result?.validation.dimensions ? 'text-teal-600' : 'text-neutral-400'}`}>✓</span>
+                <div>
+                  <div className="text-[10px] text-neutral-500 font-medium">Dimensions</div>
+                  <div className="text-xs font-bold text-neutral-900 font-mono">{requirement.width} × {requirement.height} px</div>
+                  <div className="text-[9px] text-teal-600 font-medium">Matches spec</div>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200 flex items-start gap-2">
+                <span className={`text-sm ${result?.validation.fileSize ? 'text-teal-600' : 'text-amber-500'}`}>
+                  {result?.validation.fileSize ? '✓' : '•'}
+                </span>
+                <div>
+                  <div className="text-[10px] text-neutral-500 font-medium">File size</div>
+                  <div className="text-xs font-bold text-neutral-900 font-mono">
+                    {result ? `${result.fileSizeKB} KB` : `${requirement.minKB}–${requirement.maxKB} KB`}
+                  </div>
+                  <div className="text-[9px] text-teal-600 font-medium">
+                    {result?.validation.fileSize ? 'Within range' : 'Pending upload'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200 flex items-start gap-2">
+                <span className={`text-sm ${result?.validation.format ? 'text-teal-600' : 'text-neutral-400'}`}>✓</span>
+                <div>
+                  <div className="text-[10px] text-neutral-500 font-medium">Format</div>
+                  <div className="text-xs font-bold text-neutral-900 uppercase font-mono">{format}</div>
+                  <div className="text-[9px] text-teal-600 font-medium">Valid output</div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <dl className="space-y-3 mb-6">
-            <div className="flex items-center justify-between p-3 bg-charcoal-50 rounded-lg">
-              <dt className="flex items-center gap-2 text-sm text-charcoal-700">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center ${validation.dimensions ? 'bg-green-500' : 'bg-red-500'}`}>
-                  {validation.dimensions ? (
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                  ) : (
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                  )}
-                </span>
-                Dimensions
-              </dt>
-              <dd className="font-mono text-sm font-medium text-charcoal-900">
-                {result.width} × {result.height} px
-              </dd>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 bg-charcoal-50 rounded-lg">
-              <dt className="flex items-center gap-2 text-sm text-charcoal-700">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center ${validation.fileSize ? 'bg-green-500' : 'bg-red-500'}`}>
-                  {validation.fileSize ? (
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                  ) : (
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                  )}
-                </span>
-                File Size
-              </dt>
-              <dd className={`font-mono text-sm font-medium ${validation.fileSize ? 'text-green-700' : 'text-red-700'}`}>
-                {result.fileSizeKB} KB (required: {requirement.minKB}–{requirement.maxKB} KB)
-              </dd>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 bg-charcoal-50 rounded-lg">
-              <dt className="flex items-center gap-2 text-sm text-charcoal-700">
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center ${validation.format ? 'bg-green-500' : 'bg-red-500'}`}>
-                  {validation.format ? (
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                  ) : (
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                  )}
-                </span>
-                Format
-              </dt>
-              <dd className="font-mono text-sm font-medium text-charcoal-900">
-                {result.format}
-              </dd>
-            </div>
-          </dl>
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-4">
-            <Button onClick={handleDownload} disabled={!validation.overall} className="flex-1 sm:flex-none">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={!result || !result.validation.overall}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-neutral-950 text-white font-bold text-sm shadow-md hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              Download {result.format}
-            </Button>
-            <Button variant="secondary" onClick={handleReset}>
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Start Over
-            </Button>
+              <span>Download Signature</span>
+            </button>
           </div>
-
-          {!validation.overall && (
-            <p className="mt-4 text-sm text-red-700 bg-red-50 p-3 rounded-lg">
-              <strong>Unable to meet requirements:</strong> {validation.errors.join('. ')}
-              {result.fileSizeKB > requirement.maxKB && ' Try retaking the signature with a plain background for better compression.'}
-            </p>
-          )}
-
-          <p className="mt-4 text-xs text-charcoal-500 text-center">
-            Matches the configured requirements. Always verify with the official notification before submitting.
-          </p>
         </div>
+
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
+            {error}
+          </div>
+        )}
       </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }
-
-const sigFileInputRef = { current: null as HTMLInputElement | null };

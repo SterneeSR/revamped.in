@@ -10,7 +10,7 @@ declare module 'react-image-crop' {
   }
 
   export interface ReactCropProps {
-    src: string;
+    src?: string;
     crop?: Crop;
     onChange?: (crop: Crop, percentCrop: Crop) => void;
     onComplete?: (crop: Crop, percentCrop: Crop) => void;

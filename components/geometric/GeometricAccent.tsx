@@ -8,108 +8,96 @@ interface GeometricAccentProps {
 }
 
 export function GeometricAccent({ variant = 'hero', className }: GeometricAccentProps) {
-  const variants = {
-    hero: (
-      <svg viewBox="0 0 400 200" className="w-full h-full" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="heroGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#0d1b2a" stopOpacity="0.06" />
-            <stop offset="50%" stopColor="#1b998b" stopOpacity="0.03" />
-            <stop offset="100%" stopColor="#2ec4b6" stopOpacity="0.02" />
-          </linearGradient>
-        </defs>
-        <rect width="400" height="200" fill="url(#heroGradient)" />
-        <g opacity="0.15" transform="translate(200, 100)">
-          <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" fill="none" stroke="#0d1b2a" strokeWidth="1.5" />
-          <polygon points="0,-45 39,-22.5 39,22.5 0,45 -39,22.5 -39,-22.5" fill="none" stroke="#1b998b" strokeWidth="1" />
-          <polygon points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15" fill="#2ec4b6" fillOpacity="0.2" />
-        </g>
-        <g opacity="0.08">
-          <polygon points="0,0 80,0 0,80" fill="#1b998b" />
-          <polygon points="400,0 320,0 400,80" fill="#2ec4b6" />
-          <polygon points="0,200 80,200 0,120" fill="#e87d0e" />
-          <polygon points="400,200 320,200 400,120" fill="#ff6b6b" />
-        </g>
-      </svg>
-    ),
-    divider: (
-      <svg viewBox="0 0 400 40" className="w-full h-full" preserveAspectRatio="none">
-        <g transform="translate(200, 20)" opacity="0.2">
-          <polygon points="0,-15 13,-7.5 13,7.5 0,15 -13,7.5 -13,-7.5" fill="#1b998b" />
-          <polygon points="0,-10 8.7,-5 8.7,5 0,10 -8.7,5 -8.7,-5" fill="#2ec4b6" />
-        </g>
-      </svg>
-    ),
-    corner: (
-      <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="none">
-        <polygon points="0,0 60,0 0,60" fill="#1b998b" fillOpacity="0.1" />
-        <polygon points="0,0 40,0 0,40" fill="#2ec4b6" fillOpacity="0.15" />
-      </svg>
-    ),
-    empty: (
-      <svg viewBox="0 0 200 200" className="w-full h-full" preserveAspectRatio="none">
-        <g transform="translate(100, 100)" opacity="0.15">
-          <polygon points="0,-50 43,-25 43,25 0,50 -43,25 -43,-25" fill="none" stroke="#0d1b2a" strokeWidth="1.5" />
-          <polygon points="0,-35 30,-17.5 30,17.5 0,35 -30,17.5 -30,-17.5" fill="none" stroke="#1b998b" strokeWidth="1" />
-          <polygon points="0,-20 17,-10 17,10 0,20 -17,10 -17,-10" fill="#2ec4b6" fillOpacity="0.2" />
-        </g>
-      </svg>
-    ),
-    success: (
-      <svg viewBox="0 0 120 120" className="w-full h-full" preserveAspectRatio="none">
-        <g transform="translate(60, 60)">
-          <polygon points="0,-40 35,-20 35,20 0,40 -35,20 -35,-20" fill="#1b998b" fillOpacity="0.2" />
-          <polygon points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15" fill="#1b998b" fillOpacity="0.3" />
-          <path d="M-8 0 L0 8 L12 -12" stroke="#1b998b" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        </g>
-      </svg>
-    ),
-    ad: (
-      <svg viewBox="0 0 728 90" className="w-full h-full" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="adGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#1b998b" stopOpacity="0.05" />
-            <stop offset="50%" stopColor="#2ec4b6" stopOpacity="0.03" />
-            <stop offset="100%" stopColor="#e87d0e" stopOpacity="0.04" />
-          </linearGradient>
-        </defs>
-        <rect width="728" height="90" fill="url(#adGradient)" />
-        <rect x="2" y="2" width="724" height="86" fill="none" stroke="#1b998b" strokeWidth="0.5" strokeOpacity="0.1" rx="4" />
-      </svg>
-    ),
-  };
+  if (variant === 'hero') {
+    return (
+      <div className={clsx('overflow-hidden pointer-events-none select-none', className)} aria-hidden="true">
+        <svg
+          viewBox="0 0 540 500"
+          className="w-full h-full object-cover"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Subtle background glow */}
+          <defs>
+            <radialGradient id="hexGlow" cx="80%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#1b998b" stopOpacity="0.08" />
+              <stop offset="60%" stopColor="#e87d0e" stopOpacity="0.04" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#hexGlow)" />
 
-  const sizeClasses = {
-    hero: 'w-full h-64 md:h-96',
-    divider: 'w-full h-8',
-    corner: 'absolute w-24 h-24',
-    empty: 'w-48 h-48 mx-auto',
-    success: 'w-24 h-24 mx-auto',
-    ad: 'w-full h-full',
-  };
+          {/* Isometric Faceted Tessellation matching reference */}
+          <g transform="translate(180, -20)">
+            {/* Cluster 1 - Deep Navy & Teal Facets */}
+            <polygon points="120,40 180,75 120,110 60,75" fill="#0d1b2a" opacity="0.95" />
+            <polygon points="180,75 240,40 240,110 180,145" fill="#142d45" opacity="0.9" />
+            <polygon points="120,110 180,145 180,215 120,180" fill="#1b998b" opacity="0.95" />
+            <polygon points="60,75 120,110 120,180 60,145" fill="#136f65" opacity="0.9" />
 
-  return (
-    <div className={clsx('overflow-hidden', sizeClasses[variant], className)} aria-hidden="true">
-      {variants[variant]}
-    </div>
-  );
-}
+            {/* Cluster 2 - Turquoise & Teal */}
+            <polygon points="180,145 240,110 300,145 240,180" fill="#2ec4b6" opacity="0.9" />
+            <polygon points="240,180 300,145 300,215 240,250" fill="#1b998b" opacity="0.85" />
+            <polygon points="180,215 240,180 240,250 180,285" fill="#0f4c5c" opacity="0.95" />
 
-export function GeometricPattern({ className, opacity = 0.04 }: { className?: string; opacity?: number }) {
-  return (
-    <div
-      className={clsx('absolute inset-0 pointer-events-none', className)}
-      style={{ opacity }}
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 400 400" className="w-full h-full" preserveAspectRatio="none">
-        <defs>
-          <pattern id="hexPattern" patternUnits="userSpaceOnUse" width="80" height="69.28">
-            <polygon points="40,0 80,34.64 80,103.92 40,138.56 0,103.92 0,34.64" fill="none" stroke="currentColor" strokeWidth="0.5" />
-          </pattern>
-        </defs>
-        <rect width="400" height="400" fill="url(#hexPattern)" stroke="currentColor" />
-      </svg>
-    </div>
-  );
+            {/* Cluster 3 - Vibrant Coral & Orange Peak (Reference highlight) */}
+            <polygon points="240,40 300,75 240,110 180,75" fill="#e87d0e" opacity="0.95" />
+            <polygon points="300,75 360,40 360,110 300,145" fill="#ff6b6b" opacity="0.95" />
+            <polygon points="300,145 360,110 360,180 300,215" fill="#f4845f" opacity="0.85" />
+            <polygon points="240,40 300,5 360,40 300,75" fill="#f79d65" opacity="0.9" />
+
+            {/* Accent Triangles / Small Facets */}
+            <polygon points="360,110 420,145 360,180" fill="#e76f51" opacity="0.75" />
+            <polygon points="120,180 180,215 120,250 60,215" fill="#1b998b" opacity="0.7" />
+            <polygon points="180,285 240,250 240,320 180,355" fill="#0d1b2a" opacity="0.85" />
+            <polygon points="240,250 300,215 300,285 240,320" fill="#2ec4b6" opacity="0.65" />
+          </g>
+        </svg>
+      </div>
+    );
+  }
+
+  if (variant === 'ad') {
+    return (
+      <div className={clsx('overflow-hidden w-full h-full relative flex items-center justify-center', className)} aria-hidden="true">
+        <svg viewBox="0 0 728 90" className="w-full h-full object-cover" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="adGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0d1b2a" stopOpacity="0.9" />
+              <stop offset="35%" stopColor="#1b998b" stopOpacity="0.85" />
+              <stop offset="70%" stopColor="#2ec4b6" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#e87d0e" stopOpacity="0.9" />
+            </linearGradient>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#adGrad)" />
+          {/* Faceted geometric lines overlay */}
+          <g stroke="#ffffff" strokeWidth="0.75" strokeOpacity="0.25">
+            <line x1="40" y1="0" x2="100" y2="90" />
+            <line x1="100" y1="90" x2="160" y2="0" />
+            <line x1="160" y1="0" x2="220" y2="90" />
+            <line x1="220" y1="90" x2="280" y2="0" />
+            <line x1="500" y1="0" x2="560" y2="90" />
+            <line x1="560" y1="90" x2="620" y2="0" />
+            <line x1="620" y1="0" x2="680" y2="90" />
+          </g>
+        </svg>
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] flex flex-col items-center justify-center text-white/90">
+          <span className="text-[10px] font-mono tracking-widest uppercase opacity-75">ADVERTISEMENT</span>
+          <span className="text-xs font-medium">AdSense banner slot reserved</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (variant === 'divider') {
+    return (
+      <div className={clsx('overflow-hidden w-full h-4', className)} aria-hidden="true">
+        <svg viewBox="0 0 400 16" className="w-full h-full" preserveAspectRatio="none">
+          <path d="M0,8 L180,8 L190,0 L200,16 L210,0 L220,8 L400,8" stroke="#E5E5E5" strokeWidth="1" fill="none" />
+        </svg>
+      </div>
+    );
+  }
+
+  return null;
 }
